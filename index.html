@@ -1,0 +1,1282 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>GeoQuiz</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/globe.gl@2.27.2/dist/globe.gl.min.js"></script>
+  <script src="https://unpkg.com/topojson-client@3/dist/topojson-client.min.js"></script>
+  <!-- Import D3.js for 2D Fallback Engine -->
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  
+  <style>
+    :root {
+      --bg-lobby:  #e4e1d3;
+      --bg-game:   #080c14;
+      --surface:   #f4f0e6;
+      --border:    #111111;
+      --text:      #111111;
+      --text-inv:  #e4e1d3;
+      --text-dim:  #444444;
+      --text-mute: #777777;
+      --accent:    #1e8449; /* Brutalist Green */
+      --green:     #28a745;
+      --red:       #c13a2a;
+      --shadow:    6px 6px 0px #111111;
+      --shadow-lg: 12px 12px 0px #111111;
+      --radius:    0px;
+      --font-heading: 'Anton', sans-serif;
+      --font-body: 'Inter', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 100%; height: 100%;
+      background: var(--bg-game);
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 16px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      overflow: hidden;
+    }
+
+    .hidden { display: none !important; }
+    .hide { display: none !important; }
+    .mono   { font-family: var(--font-mono); }
+    button  { cursor: pointer; font-family: inherit; border: none; outline: none; }
+
+    .screen {
+      position: fixed; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      transition: opacity .4s ease, transform .4s ease;
+      z-index: 1;
+    }
+    .screen.gone {
+      opacity: 0; pointer-events: none;
+      transform: scale(.97);
+    }
+
+    /* ===================== LOADING & MODALS ===================== */
+    .overlay {
+      position: fixed; inset: 0; z-index: 30;
+      background: rgba(8,12,20,0.95);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      transition: opacity .3s;
+    }
+    .loading-spinner {
+      width: 44px; height: 44px;
+      border: 4px solid var(--border);
+      border-top-color: var(--text-inv);
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text {
+      font-family: var(--font-heading);
+      font-size: 24px;
+      letter-spacing: 2px;
+      color: var(--text-inv);
+      margin-top: 16px;
+      text-transform: uppercase;
+    }
+
+    .brutalist-card {
+      background: var(--surface);
+      border: 4px solid var(--border);
+      box-shadow: var(--shadow-lg);
+      padding: 32px;
+      max-width: 480px;
+      text-align: center;
+    }
+
+    /* ===================== LOBBY SCREEN ===================== */
+    #lobby {
+      background: var(--bg-lobby);
+      flex-direction: column;
+      z-index: 2;
+    }
+    .lobby-container {
+      width: min(900px, 92vw);
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+    .lobby-header {
+      display: flex;
+      align-items: baseline;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+    .huge-number {
+      font-family: var(--font-heading);
+      font-size: 160px;
+      line-height: 0.8;
+      color: var(--border);
+      text-shadow: 8px 8px 0px rgba(0,0,0,0.1);
+    }
+    .lobby-title-wrap {
+      display: flex;
+      flex-direction: column;
+    }
+    .lobby-title {
+      font-family: var(--font-heading);
+      font-size: 72px;
+      line-height: 0.9;
+      text-transform: uppercase;
+      color: var(--text);
+      letter-spacing: 1px;
+    }
+    .lobby-sub {
+      font-size: 18px;
+      font-weight: 500;
+      color: var(--text-dim);
+      margin-top: 8px;
+      max-width: 400px;
+    }
+
+    .controls-row {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+    .opt-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .opt-label {
+      font-family: var(--font-heading);
+      font-size: 20px;
+      letter-spacing: 1px;
+      color: var(--text);
+      text-transform: uppercase;
+    }
+    .opt-pills {
+      display: flex; gap: 16px; flex-wrap: wrap;
+    }
+    .pill {
+      min-width: 140px;
+      padding: 12px 16px;
+      background: var(--surface);
+      border: 3px solid var(--border);
+      color: var(--text);
+      font-size: 18px;
+      font-weight: 900;
+      text-transform: uppercase;
+      text-align: center;
+      transition: all .1s ease;
+      box-shadow: 4px 4px 0px var(--border);
+    }
+    .pill:hover {
+      transform: translate(-2px, -2px);
+      box-shadow: 6px 6px 0px var(--border);
+    }
+    .pill:active {
+      transform: translate(2px, 2px);
+      box-shadow: 2px 2px 0px var(--border);
+    }
+    .pill.selected {
+      background: var(--text);
+      color: var(--bg-lobby);
+      box-shadow: 4px 4px 0px var(--border);
+    }
+    .pill-sub {
+      display: block;
+      font-size: 12px;
+      font-family: var(--font-body);
+      font-weight: 500;
+      margin-top: 4px;
+      opacity: 0.8;
+    }
+
+    .action-row {
+      display: flex;
+      gap: 16px;
+      margin-top: 24px;
+    }
+    #btn-play {
+      padding: 16px 32px;
+      background: var(--accent);
+      border: 4px solid var(--border);
+      font-family: var(--font-heading);
+      font-size: 32px;
+      color: #fff;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      box-shadow: 8px 8px 0px var(--border);
+      transition: all .1s ease;
+    }
+    #btn-play:hover {
+      transform: translate(-2px, -2px);
+      box-shadow: 10px 10px 0px var(--border);
+    }
+    #btn-play:active {
+      transform: translate(4px, 4px);
+      box-shadow: 4px 4px 0px var(--border);
+    }
+
+    .steps-row {
+      display: flex;
+      gap: 24px;
+      margin-top: 48px;
+      padding-top: 32px;
+      border-top: 3px solid var(--border);
+    }
+    .step-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      flex: 1;
+    }
+    .step-num {
+      font-family: var(--font-heading);
+      font-size: 32px;
+      color: var(--accent);
+      line-height: 1;
+    }
+    .step-text {
+      display: flex;
+      flex-direction: column;
+    }
+    .step-title {
+      font-family: var(--font-heading);
+      font-size: 20px;
+      text-transform: uppercase;
+    }
+    .step-desc {
+      font-size: 14px;
+      color: var(--text-dim);
+    }
+
+    /* ===================== GAME SCREEN ===================== */
+    #game-screen {
+      z-index: 2;
+      align-items: stretch;
+      justify-content: stretch;
+    }
+    #globe-mount {
+      position: fixed; inset: 0;
+      z-index: 0;
+    }
+
+    /* HUD Brutalist */
+    .hud {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      padding: 16px 24px;
+      gap: 16px;
+      background: var(--surface);
+      border-bottom: 4px solid var(--border);
+      color: var(--text);
+    }
+    .hud-brand {
+      font-family: var(--font-heading);
+      font-size: 24px;
+      letter-spacing: 1px;
+    }
+    .hud-mode-pill {
+      font-weight: 700;
+      font-size: 14px;
+      background: var(--text);
+      color: var(--text-inv);
+      padding: 4px 12px;
+      text-transform: uppercase;
+    }
+    .hud-d3-pill {
+      font-weight: 700;
+      font-size: 14px;
+      background: var(--accent);
+      color: var(--text-inv);
+      padding: 4px 12px;
+      text-transform: uppercase;
+      box-shadow: 2px 2px 0px var(--border);
+      border: 1px solid var(--border);
+    }
+    .hud-badge {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--bg-lobby);
+      border: 2px solid var(--border);
+      padding: 6px 12px;
+      font-weight: 700;
+    }
+    .hud-spacer { flex: 1; }
+    #btn-finish {
+      background: var(--text);
+      color: var(--text-inv);
+      border: 3px solid var(--border);
+      padding: 8px 16px;
+      font-family: var(--font-heading);
+      font-size: 16px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      box-shadow: 4px 4px 0px var(--border);
+    }
+    #btn-finish:active {
+      transform: translate(2px, 2px);
+      box-shadow: 2px 2px 0px var(--border);
+    }
+
+    #progress-bar {
+      position: fixed;
+      top: 72px; left: 0; right: 0;
+      height: 6px;
+      background: var(--surface);
+      border-bottom: 2px solid var(--border);
+      z-index: 9;
+    }
+    #progress-fill {
+      height: 100%;
+      background: var(--accent);
+      width: 0%;
+      transition: width .3s ease;
+      border-right: 2px solid var(--border);
+    }
+
+    #instruction-banner {
+      position: fixed;
+      bottom: 32px; left: 50%; transform: translateX(-50%);
+      background: var(--surface);
+      color: var(--text);
+      border: 3px solid var(--border);
+      padding: 12px 24px;
+      font-family: var(--font-heading);
+      font-size: 20px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      box-shadow: 6px 6px 0px var(--border);
+      z-index: 10;
+      pointer-events: none;
+      transition: opacity 1s;
+    }
+
+    #region-tooltip {
+      position: fixed;
+      z-index: 20;
+      background: var(--surface);
+      color: var(--text);
+      border: 2px solid var(--border);
+      padding: 8px 12px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      box-shadow: 4px 4px 0px var(--border);
+      pointer-events: none;
+    }
+
+    /* ===================== ANSWER OVERLAY ===================== */
+    .answer-card {
+      background: var(--surface);
+      border: 4px solid var(--border);
+      box-shadow: var(--shadow-lg);
+      padding: 32px;
+      width: 400px;
+      text-align: center;
+      color: var(--text);
+    }
+    .answer-prompt {
+      font-family: var(--font-heading);
+      font-size: 28px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .answer-hint {
+      font-size: 14px;
+      color: var(--text-dim);
+      margin-bottom: 24px;
+      min-height: 20px;
+    }
+    .answer-input-wrap {
+      position: relative;
+      margin-bottom: 24px;
+    }
+    #answer-input {
+      width: 100%;
+      background: var(--bg-lobby);
+      border: 3px solid var(--border);
+      padding: 16px;
+      font-family: var(--font-mono);
+      font-size: 18px;
+      color: var(--text);
+      text-transform: uppercase;
+      text-align: center;
+      outline: none;
+      box-shadow: inset 2px 2px 0px rgba(0,0,0,0.1);
+    }
+    #answer-input:focus {
+      border-color: var(--accent);
+    }
+    .answer-status-icon {
+      position: absolute;
+      right: 16px; top: 50%; transform: translateY(-50%);
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 16px;
+    }
+    .status-icon.correct { color: var(--green); }
+    .status-icon.wrong { color: var(--red); }
+
+    .answer-actions {
+      display: flex; gap: 16px;
+    }
+    .answer-actions button {
+      flex: 1;
+      padding: 16px;
+      font-family: var(--font-heading);
+      font-size: 20px;
+      border: 3px solid var(--border);
+      text-transform: uppercase;
+      box-shadow: 4px 4px 0px var(--border);
+    }
+    #btn-confirm { background: var(--text); color: var(--text-inv); }
+    #btn-confirm:active { transform: translate(2px,2px); box-shadow: 2px 2px 0px var(--border); }
+    #btn-skip { background: var(--surface); color: var(--text); }
+    #btn-skip:active { transform: translate(2px,2px); box-shadow: 2px 2px 0px var(--border); }
+
+    .answer-feedback {
+      margin-top: 16px;
+      font-weight: 700;
+      text-transform: uppercase;
+      opacity: 0;
+    }
+    .answer-feedback.visible { opacity: 1; }
+    .answer-feedback.correct { color: var(--green); }
+    .answer-feedback.wrong { color: var(--red); }
+
+    /* ===================== RESULT SCREEN ===================== */
+    .result-card {
+      background: var(--surface);
+      border: 4px solid var(--border);
+      box-shadow: var(--shadow-lg);
+      padding: 40px;
+      width: min(600px, 92vw);
+      max-height: 90vh;
+      display: flex; flex-direction: column;
+      color: var(--text);
+    }
+    .result-header {
+      text-align: center;
+      margin-bottom: 32px;
+      border-bottom: 4px solid var(--border);
+      padding-bottom: 24px;
+    }
+    .result-title {
+      font-family: var(--font-heading);
+      font-size: 48px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .result-mode-tag {
+      display: inline-block;
+      background: var(--text);
+      color: var(--text-inv);
+      font-weight: 700;
+      padding: 4px 12px;
+      text-transform: uppercase;
+    }
+    .result-stats {
+      display: flex; gap: 16px; margin-bottom: 32px;
+    }
+    .stat-box {
+      flex: 1;
+      background: var(--bg-lobby);
+      border: 3px solid var(--border);
+      padding: 16px;
+      text-align: center;
+      box-shadow: 4px 4px 0px var(--border);
+    }
+    .stat-val {
+      font-family: var(--font-heading);
+      font-size: 32px;
+    }
+    .stat-label {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-top: 4px;
+    }
+    .result-lists-wrap {
+      display: flex; gap: 24px;
+      overflow-y: auto;
+      flex: 1;
+      min-height: 200px;
+      margin-bottom: 32px;
+    }
+    .result-list-col { flex: 1; }
+    .result-section-title {
+      font-family: var(--font-heading);
+      font-size: 20px;
+      text-transform: uppercase;
+      border-bottom: 3px solid var(--border);
+      padding-bottom: 8px;
+      margin-bottom: 12px;
+    }
+    .result-list {
+      font-family: var(--font-mono);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .result-list.correct { color: var(--green); }
+    .result-list.wrong { color: var(--red); }
+
+    .result-actions {
+      display: flex; gap: 16px;
+    }
+    .result-actions button {
+      flex: 1;
+      padding: 16px;
+      font-family: var(--font-heading);
+      font-size: 24px;
+      border: 3px solid var(--border);
+      text-transform: uppercase;
+      box-shadow: 4px 4px 0px var(--border);
+    }
+    #btn-play-again { background: var(--accent); color: #fff; }
+    #btn-play-again:active { transform: translate(2px,2px); box-shadow: 2px 2px 0px var(--border); }
+    #btn-change-mode { background: var(--surface); color: var(--text); }
+    #btn-change-mode:active { transform: translate(2px,2px); box-shadow: 2px 2px 0px var(--border); }
+
+  </style>
+</head>
+<body>
+
+<div class="overlay" id="loading-overlay" style="display:none;">
+  <div class="loading-spinner"></div>
+  <div class="loading-text">Carregando Mapa...</div>
+</div>
+
+<div class="overlay hidden" id="error-modal">
+  <div class="brutalist-card">
+    <div style="font-size: 40px; margin-bottom: 16px; font-weight: 900; color: var(--red);">[!]</div>
+    <h2 style="font-family: var(--font-heading); font-size: 24px; color: var(--red); margin-bottom: 12px; letter-spacing: 2px; text-transform: uppercase;">Erro Crítico</h2>
+    <p style="color: var(--text-dim); font-size: 16px; font-weight: 500; line-height: 1.6; margin-bottom: 24px;" id="error-message">
+      Ocorreu um erro ao inicializar os mapas.
+    </p>
+    <div style="background: var(--bg-lobby); border: 2px solid var(--border); padding: 16px;">
+      <strong style="color: var(--border); font-size: 16px; font-family: var(--font-heading); text-transform: uppercase;">Como resolver:</strong>
+      <p style="color: var(--text-dim); font-size: 14px; font-weight: 500; margin-top: 8px;">Por favor, atualize a página e tente novamente.</p>
+    </div>
+  </div>
+</div>
+
+<div class="screen" id="lobby">
+  <div class="lobby-container">
+    <div class="lobby-header">
+      <div class="huge-number" id="lobby-number">195</div>
+      <div class="lobby-title-wrap">
+        <h1 class="lobby-title">Geo Quiz.</h1>
+        <h1 class="lobby-title">Build Your<br>Map Knowledge</h1>
+      </div>
+    </div>
+    
+    <div class="controls-row">
+      <div class="opt-group">
+        <div class="opt-label">Modo de Jogo</div>
+        <div class="opt-pills">
+          <button class="pill selected" id="pill-world" data-mode="world">
+            Mundo
+            <span class="pill-sub">195 países</span>
+          </button>
+          <button class="pill" id="pill-brazil" data-mode="brazil">
+            Brasil
+            <span class="pill-sub">27 estados</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="opt-group">
+        <div class="opt-label">Dificuldade</div>
+        <div class="opt-pills">
+          <button class="pill selected" id="pill-easy" data-diff="easy">
+            Fácil
+            <span class="pill-sub">Com Fronteiras</span>
+          </button>
+          <button class="pill" id="pill-hard" data-diff="hard">
+            Difícil
+            <span class="pill-sub">Sem Fronteiras</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="action-row">
+      <button id="btn-play">PLAY NOW &rarr;</button>
+    </div>
+
+    <div class="steps-row">
+      <div class="step-item">
+        <div class="step-num">01</div>
+        <div class="step-text">
+          <div class="step-title">Selecionar</div>
+          <div class="step-desc">Escolha um modo de jogo e nível de dificuldade.</div>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">02</div>
+        <div class="step-text">
+          <div class="step-title">Identificar</div>
+          <div class="step-desc">Clique no globo para tentar adivinhar as regiões.</div>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">03</div>
+        <div class="step-text">
+          <div class="step-title">Pontuar</div>
+          <div class="step-desc">Acerte o máximo que puder e teste seu conhecimento!</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="screen gone" id="game-screen">
+  <div id="globe-mount"></div>
+  <div class="hud">
+    <span class="hud-brand">GEOQUIZ</span>
+    <span class="hud-mode-pill" id="hud-mode-pill">—</span>
+    <span class="hud-d3-pill hidden" id="hud-d3-pill">MODO 2D (SEM GPU)</span>
+    <div class="hud-spacer"></div>
+    <div class="hud-badge">
+      <span>TEMPO</span>
+      <span class="badge-val mono" id="timer-val">00:00</span>
+    </div>
+    <div class="hud-badge">
+      <span>SCORE</span>
+      <span class="badge-val mono" id="score-val">0</span>
+    </div>
+    <div class="hud-badge">
+      <span>TOTAL</span>
+      <span class="badge-val mono" id="total-val">0</span>
+    </div>
+    <div class="hud-spacer"></div>
+    <button id="btn-finish">Finalizar Jogo</button>
+  </div>
+  <div id="progress-bar"><div id="progress-fill"></div></div>
+  <div id="instruction-banner">CLIQUE EM QUALQUER REGIÃO PARA NOMEAR</div>
+</div>
+
+<div class="overlay hidden" id="answer-overlay">
+  <div class="answer-card">
+    <div class="answer-prompt">NOME DESTA REGIÃO:</div>
+    <div class="answer-hint" id="answer-hint"></div>
+    <div class="answer-input-wrap">
+      <input type="text" id="answer-input" placeholder="DIGITE AQUI..." autocomplete="off" spellcheck="false" />
+      <span class="answer-status-icon" id="status-icon"></span>
+    </div>
+    <div class="answer-actions">
+      <button id="btn-confirm">Confirmar</button>
+      <button id="btn-skip">Pular</button>
+    </div>
+    <div class="answer-feedback" id="answer-feedback"></div>
+  </div>
+</div>
+
+<div class="screen gone" id="result-screen">
+  <div class="result-card">
+    <div class="result-header">
+      <div class="result-title">Partida Concluída</div>
+      <div class="result-mode-tag" id="result-mode-tag">—</div>
+    </div>
+    <div class="result-stats">
+      <div class="stat-box">
+        <div class="stat-val mono" id="res-time">00:00</div>
+        <div class="stat-label">Tempo</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val mono" id="res-score">0</div>
+        <div class="stat-label">Acertos</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val mono" id="res-pct">0%</div>
+        <div class="stat-label">Aproveitamento</div>
+      </div>
+    </div>
+    <div class="result-lists-wrap">
+      <div class="result-list-col">
+        <div class="result-section-title">Acertos</div>
+        <div class="result-list correct" id="res-correct-list"></div>
+      </div>
+      <div class="result-list-col">
+        <div class="result-section-title">Não identificados</div>
+        <div class="result-list wrong" id="res-wrong-list"></div>
+      </div>
+    </div>
+    <div class="result-actions">
+      <button id="btn-play-again">Jogar Novamente</button>
+      <button id="btn-change-mode">Voltar ao Menu</button>
+    </div>
+  </div>
+</div>
+
+<div id="region-tooltip" class="hide"></div>
+
+<script>
+  const State = {
+    isLoading: false,
+    mode: 'world',
+    difficulty: 'easy',
+    score: 0,
+    attempts: 0,
+    timerSec: 0,
+    totalRegions: 0,
+    geoFeatures: [],
+    answered: new Map(),
+    skipped: new Set(),
+    currentFeature: null,
+    globe: null,
+    d3Mode: false,
+    d3Svg: null,
+    d3Path: null,
+    timerInterval: null
+  };
+
+  const DOM = {
+    loading: document.getElementById('loading-overlay'),
+    loadingText: document.querySelector('.loading-text'),
+    errorModal: document.getElementById('error-modal'),
+    errorMessage: document.getElementById('error-message'),
+    tooltip: document.getElementById('region-tooltip'),
+    overlay: document.getElementById('answer-overlay'),
+    answerInput: document.getElementById('answer-input'),
+    statusIcon: document.getElementById('status-icon'),
+    answerFeedback: document.getElementById('answer-feedback'),
+    hudMode: document.getElementById('hud-mode-pill'),
+    d3Pill: document.getElementById('hud-d3-pill')
+  };
+
+  const COUNTRY_ALIASES = {
+    'brasil': ['brazil','brasil','federative republic of brazil'],
+    'estados unidos': ['usa','eua','estados unidos','united states','us','united states of america','america'],
+    'reino unido': ['uk','reino unido','united kingdom','great britain','grã-bretanha','gran bretanha'],
+    'russia': ['russia','russian federation'],
+    'china': ['china','peoples republic of china','república popular da china'],
+    'alemanha': ['germany','alemanha','deutschland'],
+    'franca': ['france','franca','república francesa'],
+    'espanha': ['spain','espanha','españa'],
+    'italia': ['italy','italia','itália'],
+    'japao': ['japan','japao','japão'],
+    'coreia do sul': ['south korea','south corea','coreia do sul','republic of korea'],
+    'coreia do norte': ['north korea','coreia do norte','democratic peoples republic of korea'],
+    'africa do sul': ['south africa','africa do sul','áfrica do sul'],
+    'paises baixos': ['netherlands','paises baixos','países baixos','holanda','holland'],
+    'belgica': ['belgium','belgica','bélgica'],
+    'suecia': ['sweden','suecia','suécia'],
+    'noruega': ['norway','noruega'],
+    'dinamarca': ['denmark','dinamarca'],
+    'finlandia': ['finland','finlandia','finlândia'],
+    'austria': ['austria','áustria'],
+    'suica': ['switzerland','suica','suíça'],
+    'polonia': ['poland','polonia','polônia'],
+    'republica tcheca': ['czech republic','czechia','republica tcheca','república tcheca','chéquia'],
+    'hungria': ['hungary','hungria'],
+    'romenia': ['romania','romenia','romênia'],
+    'ukrania': ['ukraine','ukrania','ucrânia'],
+    'grecia': ['greece','grecia','grécia'],
+    'turquia': ['turkey','turquia'],
+    'egito': ['egypt','egito'],
+    'nigeria': ['nigeria','nigéria'],
+    'quenia': ['kenya','quenia','quênia'],
+    'etiopia': ['ethiopia','etiopia','etiópia'],
+    'marrocos': ['morocco','marrocos'],
+    'indonesia': ['indonesia','indonésia'],
+    'australia': ['australia','austrália'],
+    'nova zelandia': ['new zealand','nova zelandia','nova zelândia'],
+    'canada': ['canada','canadá'],
+    'mexico': ['mexico','méxico'],
+    'argentina': ['argentina'],
+    'colombia': ['colombia','colômbia'],
+    'venezuela': ['venezuela'],
+    'peru': ['peru'],
+    'chile': ['chile'],
+    'bolivia': ['bolivia','bolívia'],
+    'paraguai': ['paraguay','paraguai'],
+    'uruguai': ['uruguay','uruguai'],
+    'equador': ['ecuador','equador'],
+    'india': ['india','índia'],
+    'paquistao': ['pakistan','paquistao','paquistão'],
+    'bangladesh': ['bangladesh'],
+  };
+
+  const BR_STATE_ALIASES = {
+    'acre': ['acre','ac'],
+    'alagoas': ['alagoas','al'],
+    'amapa': ['amapa','amapá','ap'],
+    'amazonas': ['amazonas','am'],
+    'bahia': ['bahia','ba'],
+    'ceara': ['ceara','ceará','ce'],
+    'distrito federal': ['distrito federal','df','brasilia','brasília'],
+    'espirito santo': ['espirito santo','espírito santo','es'],
+    'goias': ['goias','goiás','go'],
+    'maranhao': ['maranhao','maranhão','ma'],
+    'mato grosso': ['mato grosso','mt'],
+    'mato grosso do sul': ['mato grosso do sul','ms'],
+    'minas gerais': ['minas gerais','mg'],
+    'para': ['para','pará','pa'],
+    'paraiba': ['paraiba','paraíba','pb'],
+    'parana': ['parana','paraná','pr'],
+    'pernambuco': ['pernambuco','pe'],
+    'piaui': ['piaui','piauí','pi'],
+    'rio de janeiro': ['rio de janeiro','rj','rio'],
+    'rio grande do norte': ['rio grande do norte','rn'],
+    'rio grande do sul': ['rio grande do sul','rs'],
+    'rondonia': ['rondonia','rondônia','ro'],
+    'roraima': ['roraima','rr'],
+    'santa catarina': ['santa catarina','sc'],
+    'sao paulo': ['sao paulo','são paulo','sp'],
+    'sergipe': ['sergipe','se'],
+    'tocantins': ['tocantins','to'],
+  };
+
+  function norm(str) {
+    return String(str).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9 ]/g, '').trim();
+  }
+
+  function checkAnswer(userInput, feature) {
+    const u = norm(userInput);
+    if (!u) return false;
+    const correctName = norm(feature.properties.name || '');
+    if (u === correctName) return true;
+    const aliasMap = State.mode === 'brazil' ? BR_STATE_ALIASES : COUNTRY_ALIASES;
+    for (const [key, aliases] of Object.entries(aliasMap)) {
+      if (aliases.includes(correctName) || key === correctName) {
+        if (aliases.includes(u) || key === u) return true;
+      }
+    }
+    if (correctName.includes(u) && u.length >= 4) return true;
+    return false;
+  }
+
+  function formatTime(sec) {
+    const m = Math.floor(sec / 60).toString().padStart(2,'0');
+    const s = (sec % 60).toString().padStart(2,'0');
+    return `${m}:${s}`;
+  }
+  function startTimer() {
+    stopTimer();
+    document.getElementById('timer-val').textContent = formatTime(State.timerSec);
+    State.timerInterval = setInterval(() => {
+      State.timerSec++;
+      document.getElementById('timer-val').textContent = formatTime(State.timerSec);
+    }, 1000);
+  }
+  function stopTimer() {
+    if (State.timerInterval) clearInterval(State.timerInterval);
+    State.timerInterval = null;
+  }
+
+  function updateHUD() {
+    document.getElementById('score-val').textContent = State.score;
+    document.getElementById('total-val').textContent = `${State.answered.size + State.skipped.size} / ${State.totalRegions}`;
+    const pct = State.totalRegions > 0 ? (State.answered.size + State.skipped.size) / State.totalRegions : 0;
+    document.getElementById('progress-fill').style.width = (pct * 100) + '%';
+  }
+
+  function showScreen(id) {
+    ['lobby','game-screen','result-screen'].forEach(sid => {
+      document.getElementById(sid).classList.toggle('gone', sid !== id);
+    });
+  }
+
+  document.querySelectorAll('[data-mode]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('[data-mode]').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      State.mode = btn.dataset.mode;
+      document.getElementById('lobby-number').textContent = State.mode === 'world' ? '195' : '27';
+    });
+  });
+  document.querySelectorAll('[data-diff]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('[data-diff]').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      State.difficulty = btn.dataset.diff;
+    });
+  });
+
+  document.getElementById('btn-play').addEventListener('click', startGame);
+
+  async function fetchWithTimeout(url, timeoutMs = 12000) {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+    try {
+      const r = await fetch(url, { signal: ctrl.signal });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      return r;
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  async function loadGeoData(mode) {
+    if (mode === 'world') {
+      const resp = await fetchWithTimeout('https://unpkg.com/world-atlas@2/countries-110m.json');
+      const topo = await resp.json();
+      const geojson = topojson.feature(topo, topo.objects.countries);
+      return geojson.features.map((f, i) => {
+        f.id = f.properties?.ISO_A3 || String(i);
+        f.properties.name = f.properties.name || f.properties.ADMIN || `Pais ${i}`;
+        return f;
+      });
+    } else {
+      const resp = await fetchWithTimeout('https://raw.githubusercontent.com/codeforamerica/click_that_hood/master/public/data/brazil-states.geojson');
+      const geojson = await resp.json();
+      return geojson.features.map((f, i) => {
+        f.id = f.properties?.sigla || String(i);
+        f.properties.name = f.properties.name || f.properties.sigla || `Estado ${i}`;
+        return f;
+      });
+    }
+  }
+
+  const COL_DEFAULT = 'rgba(30,50,90,0.55)';
+  const COL_HOVER = 'rgba(79,158,248,0.35)';
+  const COL_CORRECT = 'rgba(40,167,69,0.72)';
+  const COL_WRONG = 'rgba(193,58,42,0.72)';
+
+  function getPolygonColor(f) {
+    if (State.answered.has(f.id)) return State.answered.get(f.id).correct ? COL_CORRECT : 'rgba(255,255,255,0.1)';
+    if (State.skipped.has(f.id)) return 'rgba(255,255,255,0.1)';
+    if (State.currentFeature && State.currentFeature.id === f.id) return COL_HOVER;
+    return COL_DEFAULT;
+  }
+  function getPolygonStroke(f) {
+    if (State.currentFeature && State.currentFeature.id === f.id) return 'var(--accent)';
+    return State.difficulty === 'hard' ? 'rgba(0,0,0,0)' : 'rgba(255,255,255,0.1)';
+  }
+
+  function initD3Globe(features) {
+    const el = document.getElementById('globe-mount');
+    el.innerHTML = '';
+    DOM.d3Pill.classList.remove('hidden');
+
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+
+    const projection = d3.geoOrthographic()
+      .scale(State.mode === 'world' ? 350 : 800)
+      .center(State.mode === 'world' ? [0, 0] : [-51, -14])
+      .translate([width / 2, height / 2]);
+
+    State.d3Path = d3.geoPath().projection(projection);
+
+    const svg = d3.select(el).append("svg")
+      .attr("width", width)
+      .attr("height", height)
+      .style("background", "var(--bg-game)");
+
+    State.d3Svg = svg;
+
+    // Ocean sphere background
+    svg.append("path")
+      .datum({type: "Sphere"})
+      .attr("d", State.d3Path)
+      .style("fill", "#05080e")
+      .style("stroke", "rgba(255,255,255,0.05)")
+      .style("stroke-width", 2);
+
+    const paths = svg.append("g")
+      .selectAll("path.region")
+      .data(features)
+      .enter().append("path")
+      .attr("class", "region")
+      .attr("d", State.d3Path)
+      .style("fill", d => getPolygonColor(d))
+      .style("stroke", d => getPolygonStroke(d))
+      .style("stroke-width", 1)
+      .style("cursor", "pointer")
+      .on("click", (e, d) => handleRegionClick(d))
+      .on("mouseover", (e, d) => {
+        if (!d || State.difficulty === 'easy') return;
+        const tooltip = DOM.tooltip;
+        if (State.answered.has(d.id)) {
+          const ans = State.answered.get(d.id);
+          tooltip.textContent = ans.correct ? `[ACERTO] ${ans.name}` : `[ERRO] ${ans.name}`;
+        } else if (State.skipped.has(d.id)) {
+          tooltip.textContent = '[PULADO]';
+        } else {
+          tooltip.textContent = '? CLIQUE PARA IDENTIFICAR';
+        }
+        tooltip.classList.remove('hide');
+        tooltip.style.left = (e.clientX + 14) + 'px';
+        tooltip.style.top  = (e.clientY + 14) + 'px';
+      })
+      .on("mousemove", (e) => {
+        DOM.tooltip.style.left = (e.clientX + 14) + 'px';
+        DOM.tooltip.style.top  = (e.clientY + 14) + 'px';
+      })
+      .on("mouseout", () => {
+        DOM.tooltip.classList.add('hide');
+      });
+
+    const drag = d3.drag()
+      .on("drag", (e) => {
+        const rotate = projection.rotate();
+        const k = 0.5; // sensitivity
+        projection.rotate([
+          rotate[0] + e.dx * k,
+          rotate[1] - e.dy * k
+        ]);
+        svg.selectAll("path").attr("d", State.d3Path);
+      });
+    svg.call(drag);
+
+    window.addEventListener('resize', () => {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      if (State.d3Svg) {
+        State.d3Svg.attr("width", w).attr("height", h);
+        projection.translate([w / 2, h / 2]);
+        State.d3Svg.selectAll("path").attr("d", State.d3Path);
+      }
+    });
+  }
+
+  function initGlobe(features) {
+    const el = document.getElementById('globe-mount');
+    const isWorld = State.mode === 'world';
+    DOM.d3Pill.classList.add('hidden');
+
+    try {
+      if (!State.globe) {
+        el.innerHTML = '';
+        State.globe = Globe()(el)
+          .backgroundColor('rgba(0,0,0,0)')
+          .polygonSideColor(() => 'rgba(0,0,0,0)');
+      }
+      
+      State.globe
+        .width(window.innerWidth)
+        .height(window.innerHeight)
+        .atmosphereColor('#4f9ef8')
+        .atmosphereAltitude(isWorld ? 0.18 : 0.05)
+        .polygonsData(features)
+        .polygonCapColor(getPolygonColor)
+        .polygonStrokeColor(getPolygonStroke)
+        .polygonAltitude(f => {
+          if (State.currentFeature && State.currentFeature.id === f.id) return 0.025;
+          if (State.answered.has(f.id) && State.answered.get(f.id).correct) return 0.015;
+          return 0.006;
+        })
+        .onPolygonClick(handleRegionClick)
+        .onPolygonHover(f => {
+          const tooltip = DOM.tooltip;
+          if (!f) { tooltip.classList.add('hide'); return; }
+          if (State.difficulty === 'easy') { tooltip.classList.add('hide'); return; }
+          if (State.answered.has(f.id)) {
+            const d = State.answered.get(f.id);
+            tooltip.textContent = d.correct ? `[ACERTO] ${d.name}` : `[ERRO] ${d.name}`;
+          } else if (State.skipped.has(f.id)) {
+            tooltip.textContent = '[PULADO]';
+          } else {
+            tooltip.textContent = '? CLIQUE PARA IDENTIFICAR';
+          }
+          tooltip.classList.remove('hide');
+        });
+
+      State.globe.globeImageUrl(isWorld ? 'https://unpkg.com/three-globe@2.27.2/example/img/earth-night.jpg' : null);
+      if (!isWorld) State.globe.globeImageUrl('https://unpkg.com/three-globe@2.27.2/example/img/earth-night.jpg');
+
+      const controls = State.globe.controls();
+      controls.autoRotate = isWorld;
+      controls.autoRotateSpeed = 0.18;
+      controls.enableZoom = true;
+      controls.minDistance = 120;
+      controls.maxDistance = 500;
+
+    } catch (err) {
+      console.warn("WebGL Context Initialization Failed, falling back to D3.js 2D", err);
+      State.d3Mode = true;
+      initD3Globe(features);
+      return;
+    }
+
+    if (!el.dataset.listenersAttached) {
+      el.addEventListener('pointerdown', () => { if (State.globe) State.globe.controls().autoRotate = false; });
+      el.addEventListener('pointerup', () => {
+        if (State.mode === 'world' && State.globe) setTimeout(() => State.globe.controls().autoRotate = true, 3000);
+      });
+      new ResizeObserver(() => {
+        if (State.globe && !State.d3Mode) State.globe.width(window.innerWidth).height(window.innerHeight);
+      }).observe(el);
+      el.dataset.listenersAttached = 'true';
+    }
+
+    if (!window.mousemoveAttached) {
+      window.addEventListener('mousemove', e => {
+        const t = DOM.tooltip;
+        if (!t.classList.contains('hide')) {
+          t.style.left = (e.clientX + 14) + 'px';
+          t.style.top  = (e.clientY + 14) + 'px';
+        }
+      });
+      window.mousemoveAttached = true;
+    }
+  }
+
+  function refreshGlobe() {
+    if (State.d3Mode && State.d3Svg) {
+      State.d3Svg.selectAll("path.region")
+        .style("fill", d => getPolygonColor(d))
+        .style("stroke", d => getPolygonStroke(d));
+    } else if (State.globe) {
+      State.globe.polygonCapColor(getPolygonColor).polygonStrokeColor(getPolygonStroke);
+    }
+  }
+
+  async function startGame() {
+    if (State.isLoading) return;
+    State.isLoading = true;
+    DOM.loading.style.display = 'flex';
+    showScreen('game-screen');
+    
+    State.score = 0;
+    State.timerSec = 0;
+    State.answered = new Map();
+    State.skipped = new Set();
+    State.currentFeature = null;
+
+    DOM.hudMode.textContent = `${State.mode === 'world' ? 'MUNDO' : 'BRASIL'} / ${State.difficulty === 'easy' ? 'FÁCIL' : 'DIFÍCIL'}`;
+
+    try {
+      State.geoFeatures = await loadGeoData(State.mode);
+      State.totalRegions = State.geoFeatures.length;
+      initGlobe(State.geoFeatures);
+      updateHUD();
+      startTimer();
+      DOM.loading.style.display = 'none';
+
+      setTimeout(() => {
+        document.getElementById('instruction-banner').style.opacity = '0';
+      }, 5000);
+    } catch(err) {
+      DOM.loading.style.display = 'none';
+      DOM.errorModal.classList.remove('hidden');
+      DOM.errorMessage.textContent = 'Erro ao processar mapa: ' + String(err.message);
+    } finally {
+      State.isLoading = false;
+    }
+  }
+
+  function handleRegionClick(feature) {
+    if (!feature || State.answered.has(feature.id) || State.skipped.has(feature.id)) return;
+    State.currentFeature = feature;
+    refreshGlobe();
+    openAnswerOverlay();
+  }
+
+  function openAnswerOverlay() {
+    DOM.answerInput.value = '';
+    DOM.answerInput.disabled = false;
+    DOM.answerInput.classList.remove('input-error', 'input-success');
+    DOM.answerFeedback.textContent = '';
+    DOM.answerFeedback.className = 'answer-feedback';
+    DOM.statusIcon.textContent = '';
+    DOM.statusIcon.className = 'answer-status-icon';
+    document.getElementById('answer-hint').textContent = State.difficulty === 'easy' ? '[DICA: FRONTEIRAS VISÍVEIS NO MAPA]' : '';
+    
+    DOM.overlay.classList.remove('hidden');
+    setTimeout(() => DOM.answerInput.focus(), 100);
+  }
+
+  function closeAnswerOverlay() {
+    DOM.overlay.classList.add('hidden');
+    State.currentFeature = null;
+    refreshGlobe();
+  }
+
+  function confirmAnswer() {
+    const feature = State.currentFeature;
+    const normInput = norm(DOM.answerInput.value);
+    if (!DOM.answerInput.value.trim() || !feature) { DOM.answerInput.focus(); return; }
+
+    const correct = checkAnswer(DOM.answerInput.value, feature);
+    const name = feature.properties.name || '';
+
+    if (correct) {
+      State.score++;
+      State.answered.set(feature.id, { name, correct: true });
+      DOM.answerInput.classList.add('input-success');
+      DOM.statusIcon.textContent = '[ACERTO]';
+      DOM.statusIcon.className = 'answer-status-icon correct';
+      DOM.answerFeedback.textContent = `CORRETO: ${name}`;
+      DOM.answerFeedback.className = 'answer-feedback correct visible';
+      DOM.answerInput.disabled = true;
+      refreshGlobe();
+      updateHUD();
+      setTimeout(closeAnswerOverlay, 1000);
+    } else {
+      DOM.answerInput.classList.add('input-error');
+      DOM.statusIcon.textContent = '[ERRO]';
+      DOM.statusIcon.className = 'answer-status-icon wrong';
+      DOM.answerFeedback.textContent = 'INCORRETO';
+      DOM.answerFeedback.className = 'answer-feedback wrong visible';
+      setTimeout(() => {
+        DOM.answerInput.classList.remove('input-error');
+        DOM.statusIcon.textContent = '';
+        DOM.answerFeedback.classList.remove('visible');
+      }, 1000);
+    }
+  }
+
+  function skipRegion() {
+    const feature = State.currentFeature;
+    if (!feature) return;
+    State.skipped.add(feature.id);
+    DOM.answerFeedback.textContent = 'PULADO';
+    DOM.answerFeedback.className = 'answer-feedback wrong visible';
+    refreshGlobe();
+    updateHUD();
+    setTimeout(closeAnswerOverlay, 600);
+  }
+
+  function finishGame() {
+    stopTimer();
+    buildResult();
+    showScreen('result-screen');
+  }
+
+  function buildResult() {
+    document.getElementById('result-mode-tag').textContent = `${State.mode === 'world' ? 'MUNDO' : 'BRASIL'} / ${State.difficulty === 'easy' ? 'FÁCIL' : 'DIFÍCIL'}`;
+    document.getElementById('res-time').textContent = formatTime(State.timerSec);
+    document.getElementById('res-score').textContent = State.score;
+    const pct = State.totalRegions > 0 ? Math.round((State.score / State.totalRegions) * 100) : 0;
+    document.getElementById('res-pct').textContent = pct + '%';
+
+    const corrList = document.getElementById('res-correct-list');
+    const wrongList = document.getElementById('res-wrong-list');
+    corrList.innerHTML = ''; wrongList.innerHTML = '';
+
+    State.geoFeatures.forEach(f => {
+      const name = f.properties.name || f.id;
+      const div = document.createElement('div');
+      div.textContent = name;
+      if (State.answered.has(f.id) && State.answered.get(f.id).correct) {
+        corrList.appendChild(div);
+      } else {
+        wrongList.appendChild(div);
+      }
+    });
+  }
+
+  DOM.answerInput.addEventListener('keyup', e => { if (e.key === 'Enter') confirmAnswer(); });
+  document.getElementById('btn-confirm').addEventListener('click', confirmAnswer);
+  document.getElementById('btn-skip').addEventListener('click', skipRegion);
+  document.getElementById('btn-finish').addEventListener('click', finishGame);
+  document.getElementById('btn-play-again').addEventListener('click', startGame);
+  document.getElementById('btn-change-mode').addEventListener('click', () => {
+    stopTimer();
+    showScreen('lobby');
+  });
+
+</script>
+</body>
+</html>

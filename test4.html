@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://unpkg.com/globe.gl@2.27.2/dist/globe.gl.min.js"></script>
+  <script src="https://unpkg.com/topojson-client@3/dist/topojson-client.min.js"></script>
+</head>
+<body>
+  <div id="globe"></div>
+  <script>
+    fetch('https://unpkg.com/world-atlas@2/countries-110m.json').then(r => r.json()).then(topo => {
+      const geojson = topojson.feature(topo, topo.objects.countries);
+      Globe()(document.getElementById('globe')).polygonsData(geojson.features);
+      console.log('Globe loaded', geojson.features.length);
+    });
+  </script>
+</body>
+</html>
