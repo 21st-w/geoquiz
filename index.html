@@ -806,6 +806,259 @@
     'bangladesh': ['bangladesh'],
   };
 
+const EXTRA_ALIASES = {
+  'afghanistan': ["afghanistan", "afeganistao"],
+  'aland islands': ["aland islands", "ilhas aland"],
+  'albania': ["albania", "albania"],
+  'algeria': ["algeria", "argelia"],
+  'american samoa': ["american samoa", "samoa americana"],
+  'andorra': ["andorra", "andorra"],
+  'angola': ["angola", "angola"],
+  'anguilla': ["anguilla", "anguila"],
+  'antarctica': ["antarctica", "antartida"],
+  'antigua  barbuda': ["antigua  barbuda", "antigua e barbuda"],
+  'argentina': ["argentina", "argentina"],
+  'armenia': ["armenia", "armenia"],
+  'aruba': ["aruba", "aruba"],
+  'australia': ["australia", "australia"],
+  'austria': ["austria", "austria"],
+  'azerbaijan': ["azerbaijan", "azerbaijao"],
+  'bahamas': ["bahamas", "bahamas"],
+  'bahrain': ["bahrain", "bahrein"],
+  'bangladesh': ["bangladesh", "bangladesh"],
+  'barbados': ["barbados", "barbados"],
+  'belarus': ["belarus", "bielorrussia"],
+  'belgium': ["belgium", "belgica"],
+  'belize': ["belize", "belize"],
+  'benin': ["benin", "benin"],
+  'bermuda': ["bermuda", "bermudas"],
+  'bhutan': ["bhutan", "butao"],
+  'bolivia': ["bolivia", "bolivia"],
+  'bosnia  herzegovina': ["bosnia  herzegovina", "bosnia e herzegovina"],
+  'botswana': ["botswana", "botsuana"],
+  'bouvet island': ["bouvet island", "ilha bouvet"],
+  'brazil': ["brazil", "brasil"],
+  'british indian ocean territory': ["british indian ocean territory", "territorio britanico do oceano indico"],
+  'british virgin islands': ["british virgin islands", "ilhas virgens britanicas"],
+  'brunei': ["brunei", "brunei"],
+  'bulgaria': ["bulgaria", "bulgaria"],
+  'burkina faso': ["burkina faso", "burquina faso"],
+  'burundi': ["burundi", "burundi"],
+  'cambodia': ["cambodia", "camboja"],
+  'cameroon': ["cameroon", "camaroes"],
+  'canada': ["canada", "canada"],
+  'cape verde': ["cape verde", "cabo verde"],
+  'caribbean netherlands': ["caribbean netherlands", "paises baixos caribenhos"],
+  'cayman islands': ["cayman islands", "ilhas cayman"],
+  'central african republic': ["central african republic", "republica centroafricana"],
+  'chad': ["chad", "chade"],
+  'chile': ["chile", "chile"],
+  'china': ["china", "china"],
+  'christmas island': ["christmas island", "ilha christmas"],
+  'cocos keeling islands': ["cocos keeling islands", "ilhas cocos keeling"],
+  'colombia': ["colombia", "colombia"],
+  'comoros': ["comoros", "comores"],
+  'congo  brazzaville': ["congo  brazzaville", "republica do congo"],
+  'congo  kinshasa': ["congo  kinshasa", "congo  kinshasa"],
+  'cook islands': ["cook islands", "ilhas cook"],
+  'costa rica': ["costa rica", "costa rica"],
+  'cote divoire': ["cote divoire", "costa do marfim"],
+  'croatia': ["croatia", "croacia"],
+  'cuba': ["cuba", "cuba"],
+  'curacao': ["curacao", "curacao"],
+  'cyprus': ["cyprus", "chipre"],
+  'czechia': ["czechia", "tchequia"],
+  'denmark': ["denmark", "dinamarca"],
+  'djibouti': ["djibouti", "djibuti"],
+  'dominica': ["dominica", "dominica"],
+  'dominican republic': ["dominican republic", "republica dominicana"],
+  'ecuador': ["ecuador", "equador"],
+  'egypt': ["egypt", "egito"],
+  'el salvador': ["el salvador", "el salvador"],
+  'equatorial guinea': ["equatorial guinea", "guine equatorial"],
+  'eritrea': ["eritrea", "eritreia"],
+  'estonia': ["estonia", "estonia"],
+  'eswatini': ["eswatini", "essuatini"],
+  'ethiopia': ["ethiopia", "etiopia"],
+  'falkland islands': ["falkland islands", "ilhas malvinas"],
+  'faroe islands': ["faroe islands", "ilhas faroe"],
+  'fiji': ["fiji", "fiji"],
+  'finland': ["finland", "finlandia"],
+  'france': ["france", "franca"],
+  'french guiana': ["french guiana", "guiana francesa"],
+  'french polynesia': ["french polynesia", "polinesia francesa"],
+  'french southern territories': ["french southern territories", "territorios franceses do sul"],
+  'gabon': ["gabon", "gabao"],
+  'gambia': ["gambia", "gambia"],
+  'georgia': ["georgia", "georgia"],
+  'germany': ["germany", "alemanha"],
+  'ghana': ["ghana", "gana"],
+  'gibraltar': ["gibraltar", "gibraltar"],
+  'greece': ["greece", "grecia"],
+  'greenland': ["greenland", "groenlandia"],
+  'grenada': ["grenada", "granada"],
+  'guadeloupe': ["guadeloupe", "guadalupe"],
+  'guam': ["guam", "guam"],
+  'guatemala': ["guatemala", "guatemala"],
+  'guernsey': ["guernsey", "guernsey"],
+  'guinea': ["guinea", "guine"],
+  'guineabissau': ["guineabissau", "guinebissau"],
+  'guyana': ["guyana", "guiana"],
+  'haiti': ["haiti", "haiti"],
+  'heard  mcdonald islands': ["heard  mcdonald islands", "ilhas heard e mcdonald"],
+  'honduras': ["honduras", "honduras"],
+  'hong kong sar china': ["hong kong sar china", "hong kong rae da china"],
+  'hungary': ["hungary", "hungria"],
+  'iceland': ["iceland", "islandia"],
+  'india': ["india", "india"],
+  'indonesia': ["indonesia", "indonesia"],
+  'iran': ["iran", "ira"],
+  'iraq': ["iraq", "iraque"],
+  'ireland': ["ireland", "irlanda"],
+  'isle of man': ["isle of man", "ilha de man"],
+  'israel': ["israel", "israel"],
+  'italy': ["italy", "italia"],
+  'jamaica': ["jamaica", "jamaica"],
+  'japan': ["japan", "japao"],
+  'jersey': ["jersey", "jersey"],
+  'jordan': ["jordan", "jordania"],
+  'kazakhstan': ["kazakhstan", "cazaquistao"],
+  'kenya': ["kenya", "quenia"],
+  'kiribati': ["kiribati", "quiribati"],
+  'kuwait': ["kuwait", "kuwait"],
+  'kyrgyzstan': ["kyrgyzstan", "quirguistao"],
+  'laos': ["laos", "laos"],
+  'latvia': ["latvia", "letonia"],
+  'lebanon': ["lebanon", "libano"],
+  'lesotho': ["lesotho", "lesoto"],
+  'liberia': ["liberia", "liberia"],
+  'libya': ["libya", "libia"],
+  'liechtenstein': ["liechtenstein", "liechtenstein"],
+  'lithuania': ["lithuania", "lituania"],
+  'luxembourg': ["luxembourg", "luxemburgo"],
+  'macao sar china': ["macao sar china", "macau rae da china"],
+  'madagascar': ["madagascar", "madagascar"],
+  'malawi': ["malawi", "malaui"],
+  'malaysia': ["malaysia", "malasia"],
+  'maldives': ["maldives", "maldivas"],
+  'mali': ["mali", "mali"],
+  'malta': ["malta", "malta"],
+  'marshall islands': ["marshall islands", "ilhas marshall"],
+  'martinique': ["martinique", "martinica"],
+  'mauritania': ["mauritania", "mauritania"],
+  'mauritius': ["mauritius", "mauricio"],
+  'mayotte': ["mayotte", "mayotte"],
+  'mexico': ["mexico", "mexico"],
+  'micronesia': ["micronesia", "micronesia"],
+  'moldova': ["moldova", "moldova"],
+  'monaco': ["monaco", "monaco"],
+  'mongolia': ["mongolia", "mongolia"],
+  'montenegro': ["montenegro", "montenegro"],
+  'montserrat': ["montserrat", "montserrat"],
+  'morocco': ["morocco", "marrocos"],
+  'mozambique': ["mozambique", "mocambique"],
+  'myanmar burma': ["myanmar burma", "mianmar birmania"],
+  'namibia': ["namibia", "namibia"],
+  'nauru': ["nauru", "nauru"],
+  'nepal': ["nepal", "nepal"],
+  'netherlands': ["netherlands", "paises baixos"],
+  'new caledonia': ["new caledonia", "nova caledonia"],
+  'new zealand': ["new zealand", "nova zelandia"],
+  'nicaragua': ["nicaragua", "nicaragua"],
+  'niger': ["niger", "niger"],
+  'nigeria': ["nigeria", "nigeria"],
+  'niue': ["niue", "niue"],
+  'norfolk island': ["norfolk island", "ilha norfolk"],
+  'north korea': ["north korea", "coreia do norte"],
+  'north macedonia': ["north macedonia", "macedonia do norte"],
+  'northern mariana islands': ["northern mariana islands", "ilhas marianas do norte"],
+  'norway': ["norway", "noruega"],
+  'oman': ["oman", "oma"],
+  'pakistan': ["pakistan", "paquistao"],
+  'palau': ["palau", "palau"],
+  'palestinian territories': ["palestinian territories", "territorios palestinos"],
+  'panama': ["panama", "panama"],
+  'papua new guinea': ["papua new guinea", "papuanova guine"],
+  'paraguay': ["paraguay", "paraguai"],
+  'peru': ["peru", "peru"],
+  'philippines': ["philippines", "filipinas"],
+  'pitcairn islands': ["pitcairn islands", "ilhas pitcairn"],
+  'poland': ["poland", "polonia"],
+  'portugal': ["portugal", "portugal"],
+  'puerto rico': ["puerto rico", "porto rico"],
+  'qatar': ["qatar", "catar"],
+  'reunion': ["reunion", "reuniao"],
+  'romania': ["romania", "romenia"],
+  'russia': ["russia", "russia"],
+  'rwanda': ["rwanda", "ruanda"],
+  'samoa': ["samoa", "samoa"],
+  'san marino': ["san marino", "san marino"],
+  'sao tome  principe': ["sao tome  principe", "sao tome e principe"],
+  'saudi arabia': ["saudi arabia", "arabia saudita"],
+  'senegal': ["senegal", "senegal"],
+  'serbia': ["serbia", "servia"],
+  'seychelles': ["seychelles", "seicheles"],
+  'sierra leone': ["sierra leone", "serra leoa"],
+  'singapore': ["singapore", "singapura"],
+  'sint maarten': ["sint maarten", "sint maarten"],
+  'slovakia': ["slovakia", "eslovaquia"],
+  'slovenia': ["slovenia", "eslovenia"],
+  'solomon islands': ["solomon islands", "ilhas salomao"],
+  'somalia': ["somalia", "somalia"],
+  'south africa': ["south africa", "africa do sul"],
+  'south georgia  south sandwich islands': ["south georgia  south sandwich islands", "ilhas georgia do sul e sandwich do sul"],
+  'south korea': ["south korea", "coreia do sul"],
+  'south sudan': ["south sudan", "sudao do sul"],
+  'spain': ["spain", "espanha"],
+  'sri lanka': ["sri lanka", "sri lanka"],
+  'st barthelemy': ["st barthelemy", "sao bartolomeu"],
+  'st helena': ["st helena", "santa helena"],
+  'st kitts  nevis': ["st kitts  nevis", "sao cristovao e nevis"],
+  'st lucia': ["st lucia", "santa lucia"],
+  'st martin': ["st martin", "sao martinho"],
+  'st pierre  miquelon': ["st pierre  miquelon", "sao pedro e miquelao"],
+  'st vincent  grenadines': ["st vincent  grenadines", "sao vicente e granadinas"],
+  'sudan': ["sudan", "sudao"],
+  'suriname': ["suriname", "suriname"],
+  'svalbard  jan mayen': ["svalbard  jan mayen", "svalbard e jan mayen"],
+  'sweden': ["sweden", "suecia"],
+  'switzerland': ["switzerland", "suica"],
+  'syria': ["syria", "siria"],
+  'taiwan': ["taiwan", "taiwan"],
+  'tajikistan': ["tajikistan", "tadjiquistao"],
+  'tanzania': ["tanzania", "tanzania"],
+  'thailand': ["thailand", "tailandia"],
+  'timorleste': ["timorleste", "timorleste"],
+  'togo': ["togo", "togo"],
+  'tokelau': ["tokelau", "tokelau"],
+  'tonga': ["tonga", "tonga"],
+  'trinidad  tobago': ["trinidad  tobago", "trinidad e tobago"],
+  'tunisia': ["tunisia", "tunisia"],
+  'turkey': ["turkey", "turquia"],
+  'turkmenistan': ["turkmenistan", "turcomenistao"],
+  'turks  caicos islands': ["turks  caicos islands", "ilhas turcas e caicos"],
+  'tuvalu': ["tuvalu", "tuvalu"],
+  'us outlying islands': ["us outlying islands", "ilhas menores distantes dos eua"],
+  'us virgin islands': ["us virgin islands", "ilhas virgens americanas"],
+  'uganda': ["uganda", "uganda"],
+  'ukraine': ["ukraine", "ucrania"],
+  'united arab emirates': ["united arab emirates", "emirados arabes unidos"],
+  'united kingdom': ["united kingdom", "reino unido"],
+  'united states': ["united states", "estados unidos"],
+  'uruguay': ["uruguay", "uruguai"],
+  'uzbekistan': ["uzbekistan", "uzbequistao"],
+  'vanuatu': ["vanuatu", "vanuatu"],
+  'vatican city': ["vatican city", "cidade do vaticano"],
+  'venezuela': ["venezuela", "venezuela"],
+  'vietnam': ["vietnam", "vietna"],
+  'wallis  futuna': ["wallis  futuna", "wallis e futuna"],
+  'western sahara': ["western sahara", "saara ocidental"],
+  'yemen': ["yemen", "iemen"],
+  'zambia': ["zambia", "zambia"],
+  'zimbabwe': ["zimbabwe", "zimbabue"],
+};
+
+
   const BR_STATE_ALIASES = {
     'acre': ['acre','ac'],
     'alagoas': ['alagoas','al'],
@@ -851,6 +1104,13 @@
         if (aliases.includes(u) || key === u) return true;
       }
     }
+    if (State.mode === 'world' && typeof EXTRA_ALIASES !== 'undefined') {
+      for (const [key, aliases] of Object.entries(EXTRA_ALIASES)) {
+        if (aliases.includes(correctName) || key === correctName) {
+          if (aliases.includes(u) || key === u) return true;
+        }
+      }
+    }
     if (correctName.includes(u) && u.length >= 4) return true;
     return false;
   }
@@ -862,11 +1122,27 @@
   }
   function startTimer() {
     stopTimer();
-    document.getElementById('timer-val').textContent = formatTime(State.timerSec);
-    State.timerInterval = setInterval(() => {
-      State.timerSec++;
+    State.timerSec = 0;
+    if (State.difficulty === 'hard') {
+      document.getElementById('timer-val').textContent = formatTime(600);
+      State.timerInterval = setInterval(() => {
+        State.timerSec++;
+        let left = 600 - State.timerSec;
+        if (left <= 0) {
+          left = 0;
+          document.getElementById('timer-val').textContent = formatTime(left);
+          finishGame();
+        } else {
+          document.getElementById('timer-val').textContent = formatTime(left);
+        }
+      }, 1000);
+    } else {
       document.getElementById('timer-val').textContent = formatTime(State.timerSec);
-    }, 1000);
+      State.timerInterval = setInterval(() => {
+        State.timerSec++;
+        document.getElementById('timer-val').textContent = formatTime(State.timerSec);
+      }, 1000);
+    }
   }
   function stopTimer() {
     if (State.timerInterval) clearInterval(State.timerInterval);
@@ -941,16 +1217,21 @@
   const COL_HOVER = 'rgba(79,158,248,0.35)';
   const COL_CORRECT = 'rgba(40,167,69,0.72)';
   const COL_WRONG = 'rgba(193,58,42,0.72)';
+  const COL_SKIPPED = 'rgba(230,150,40,0.7)';
 
   function getPolygonColor(f) {
     if (State.answered.has(f.id)) return State.answered.get(f.id).correct ? COL_CORRECT : 'rgba(255,255,255,0.1)';
-    if (State.skipped.has(f.id)) return 'rgba(255,255,255,0.1)';
+    if (State.skipped.has(f.id)) return COL_SKIPPED;
     if (State.currentFeature && State.currentFeature.id === f.id) return COL_HOVER;
-    return COL_DEFAULT;
+    return State.difficulty === 'hard' ? '#1e325a' : COL_DEFAULT;
   }
   function getPolygonStroke(f) {
     if (State.currentFeature && State.currentFeature.id === f.id) return 'var(--accent)';
-    return State.difficulty === 'hard' ? 'rgba(0,0,0,0)' : 'rgba(255,255,255,0.1)';
+    if (State.difficulty === 'hard') {
+      if (State.answered.has(f.id) || State.skipped.has(f.id)) return 'rgba(255,255,255,0.1)';
+      return '#1e325a';
+    }
+    return 'rgba(255,255,255,0.1)';
   }
 
   function initD3Globe(features) {
@@ -1064,7 +1345,7 @@
         .polygonAltitude(f => {
           if (State.currentFeature && State.currentFeature.id === f.id) return 0.025;
           if (State.answered.has(f.id) && State.answered.get(f.id).correct) return 0.015;
-          return 0.006;
+          return State.difficulty === 'hard' ? 0.001 : 0.006;
         })
         .onPolygonClick(handleRegionClick)
         .onPolygonHover(f => {
@@ -1166,14 +1447,21 @@
     }
   }
 
+  let closeOverlayTimer = null;
+
   function handleRegionClick(feature) {
-    if (!feature || State.answered.has(feature.id) || State.skipped.has(feature.id)) return;
+    if (!feature || State.answered.has(feature.id)) return;
+    if (State.skipped.has(feature.id)) {
+      State.skipped.delete(feature.id);
+      updateHUD();
+    }
     State.currentFeature = feature;
     refreshGlobe();
     openAnswerOverlay();
   }
 
   function openAnswerOverlay() {
+    clearTimeout(closeOverlayTimer);
     DOM.answerInput.value = '';
     DOM.answerInput.disabled = false;
     DOM.answerInput.classList.remove('input-error', 'input-success');
@@ -1183,6 +1471,10 @@
     DOM.statusIcon.className = 'answer-status-icon';
     document.getElementById('answer-hint').textContent = State.difficulty === 'easy' ? '[DICA: FRONTEIRAS VISÍVEIS NO MAPA]' : '';
     
+    if (State.globe) {
+      State.globe.controls().autoRotate = false;
+    }
+
     DOM.overlay.classList.remove('hidden');
     setTimeout(() => DOM.answerInput.focus(), 100);
   }
@@ -1190,6 +1482,9 @@
   function closeAnswerOverlay() {
     DOM.overlay.classList.add('hidden');
     State.currentFeature = null;
+    if (State.globe && State.mode === 'world') {
+      State.globe.controls().autoRotate = true;
+    }
     refreshGlobe();
   }
 
@@ -1212,7 +1507,7 @@
       DOM.answerInput.disabled = true;
       refreshGlobe();
       updateHUD();
-      setTimeout(closeAnswerOverlay, 1000);
+      closeOverlayTimer = setTimeout(closeAnswerOverlay, 1000);
     } else {
       DOM.answerInput.classList.add('input-error');
       DOM.statusIcon.textContent = '[ERRO]';
@@ -1235,7 +1530,7 @@
     DOM.answerFeedback.className = 'answer-feedback wrong visible';
     refreshGlobe();
     updateHUD();
-    setTimeout(closeAnswerOverlay, 600);
+    closeOverlayTimer = setTimeout(closeAnswerOverlay, 600);
   }
 
   function finishGame() {
