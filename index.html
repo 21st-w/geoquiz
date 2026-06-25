@@ -9,6 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet" />
   <script src="https://unpkg.com/globe.gl@2.27.2/dist/globe.gl.min.js"></script>
   <script src="https://unpkg.com/topojson-client@3/dist/topojson-client.min.js"></script>
+  <script src="i18n.js"></script>
   <!-- Import D3.js for 2D Fallback Engine -->
   <script src="https://d3js.org/d3.v7.min.js"></script>
   
@@ -545,25 +546,45 @@
     #btn-change-mode { background: var(--surface); color: var(--text); }
     #btn-change-mode:active { transform: translate(2px,2px); box-shadow: 2px 2px 0px var(--border); }
 
+  
+    #lang-toggle-btn {
+      position: fixed;
+      top: 16px; right: 24px;
+      z-index: 50;
+      background: var(--surface);
+      border: 3px solid var(--border);
+      color: var(--text);
+      font-family: var(--font-heading);
+      font-size: 18px;
+      padding: 6px 12px;
+      box-shadow: 4px 4px 0px var(--border);
+      transition: all 0.1s;
+    }
+    #lang-toggle-btn:active {
+      transform: translate(2px, 2px);
+      box-shadow: 2px 2px 0px var(--border);
+    }
   </style>
+
 </head>
 <body>
+<button id="lang-toggle-btn">EN</button>
 
 <div class="overlay" id="loading-overlay" style="display:none;">
   <div class="loading-spinner"></div>
-  <div class="loading-text">Carregando Mapa...</div>
+  <div class="loading-text" data-i18n="loadingText">Carregando Mapa...</div>
 </div>
 
 <div class="overlay hidden" id="error-modal">
   <div class="brutalist-card">
     <div style="font-size: 40px; margin-bottom: 16px; font-weight: 900; color: var(--red);">[!]</div>
-    <h2 style="font-family: var(--font-heading); font-size: 24px; color: var(--red); margin-bottom: 12px; letter-spacing: 2px; text-transform: uppercase;">Erro Crítico</h2>
-    <p style="color: var(--text-dim); font-size: 16px; font-weight: 500; line-height: 1.6; margin-bottom: 24px;" id="error-message">
+    <h2 style="font-family: var(--font-heading); font-size: 24px; color: var(--red); margin-bottom: 12px; letter-spacing: 2px; text-transform: uppercase;" data-i18n="criticalError">Erro Crítico</h2>
+    <p style="color: var(--text-dim); font-size: 16px; font-weight: 500; line-height: 1.6; margin-bottom: 24px;" id="error-message" data-i18n="errorMsg">
       Ocorreu um erro ao inicializar os mapas.
     </p>
     <div style="background: var(--bg-lobby); border: 2px solid var(--border); padding: 16px;">
-      <strong style="color: var(--border); font-size: 16px; font-family: var(--font-heading); text-transform: uppercase;">Como resolver:</strong>
-      <p style="color: var(--text-dim); font-size: 14px; font-weight: 500; margin-top: 8px;">Por favor, atualize a página e tente novamente.</p>
+      <strong style="color: var(--border); font-size: 16px; font-family: var(--font-heading); text-transform: uppercase;" data-i18n="howToSolve">Como resolver:</strong>
+      <p style="color: var(--text-dim); font-size: 14px; font-weight: 500; margin-top: 8px;" data-i18n="refreshMsg">Por favor, atualize a página e tente novamente.</p>
     </div>
   </div>
 </div>
@@ -580,58 +601,58 @@
     
     <div class="controls-row">
       <div class="opt-group">
-        <div class="opt-label">Modo de Jogo</div>
+        <div class="opt-label" data-i18n="gameMode">Modo de Jogo</div>
         <div class="opt-pills">
           <button class="pill selected" id="pill-world" data-mode="world">
-            Mundo
-            <span class="pill-sub">195 países</span>
+            <span data-i18n="world">Mundo</span>
+            <span class="pill-sub" data-i18n="worldSub">195 países</span>
           </button>
           <button class="pill" id="pill-brazil" data-mode="brazil">
-            Brasil
-            <span class="pill-sub">27 estados</span>
+            <span data-i18n="brazil">Brasil</span>
+            <span class="pill-sub" data-i18n="brazilSub">27 estados</span>
           </button>
         </div>
       </div>
 
       <div class="opt-group">
-        <div class="opt-label">Dificuldade</div>
+        <div class="opt-label" data-i18n="difficulty">Dificuldade</div>
         <div class="opt-pills">
           <button class="pill selected" id="pill-easy" data-diff="easy">
-            Fácil
-            <span class="pill-sub">Com Fronteiras</span>
+            <span data-i18n="easy">Fácil</span>
+            <span class="pill-sub" data-i18n="easySub">Com Fronteiras</span>
           </button>
           <button class="pill" id="pill-hard" data-diff="hard">
-            Difícil
-            <span class="pill-sub">Sem Fronteiras</span>
+            <span data-i18n="hard">Difícil</span>
+            <span class="pill-sub" data-i18n="hardSub">Sem Fronteiras</span>
           </button>
         </div>
       </div>
     </div>
 
     <div class="action-row">
-      <button id="btn-play">PLAY NOW &rarr;</button>
+      <button id="btn-play" data-i18n="playBtn">PLAY NOW &rarr;</button>
     </div>
 
     <div class="steps-row">
       <div class="step-item">
         <div class="step-num">01</div>
         <div class="step-text">
-          <div class="step-title">Selecionar</div>
-          <div class="step-desc">Escolha um modo de jogo e nível de dificuldade.</div>
+          <div class="step-title" data-i18n="step1Title">Selecionar</div>
+          <div class="step-desc" data-i18n="step1Desc">Escolha um modo de jogo e nível de dificuldade.</div>
         </div>
       </div>
       <div class="step-item">
         <div class="step-num">02</div>
         <div class="step-text">
-          <div class="step-title">Identificar</div>
-          <div class="step-desc">Clique no globo para tentar adivinhar as regiões.</div>
+          <div class="step-title" data-i18n="step2Title">Identificar</div>
+          <div class="step-desc" data-i18n="step2Desc">Clique no globo para tentar adivinhar as regiões.</div>
         </div>
       </div>
       <div class="step-item">
         <div class="step-num">03</div>
         <div class="step-text">
-          <div class="step-title">Pontuar</div>
-          <div class="step-desc">Acerte o máximo que puder e teste seu conhecimento!</div>
+          <div class="step-title" data-i18n="step3Title">Pontuar</div>
+          <div class="step-desc" data-i18n="step3Desc">Acerte o máximo que puder e teste seu conhecimento!</div>
         </div>
       </div>
     </div>
@@ -643,38 +664,38 @@
   <div class="hud">
     <span class="hud-brand">GEOQUIZ</span>
     <span class="hud-mode-pill" id="hud-mode-pill">—</span>
-    <span class="hud-d3-pill hidden" id="hud-d3-pill">MODO 2D (SEM GPU)</span>
+    <span class="hud-d3-pill hidden" id="hud-d3-pill" data-i18n="d3Mode">MODO 2D (SEM GPU)</span>
     <div class="hud-spacer"></div>
     <div class="hud-badge">
-      <span>TEMPO</span>
+      <span data-i18n="timeLabel">TEMPO</span>
       <span class="badge-val mono" id="timer-val">00:00</span>
     </div>
     <div class="hud-badge">
-      <span>SCORE</span>
+      <span data-i18n="scoreLabel">SCORE</span>
       <span class="badge-val mono" id="score-val">0</span>
     </div>
     <div class="hud-badge">
-      <span>TOTAL</span>
+      <span data-i18n="totalLabel">TOTAL</span>
       <span class="badge-val mono" id="total-val">0</span>
     </div>
     <div class="hud-spacer"></div>
-    <button id="btn-finish">Finalizar Jogo</button>
+    <button id="btn-finish" data-i18n="finishBtn">Finalizar Jogo</button>
   </div>
   <div id="progress-bar"><div id="progress-fill"></div></div>
-  <div id="instruction-banner">CLIQUE EM QUALQUER REGIÃO PARA NOMEAR</div>
+  <div id="instruction-banner" data-i18n="instructionBanner">CLIQUE EM QUALQUER REGIÃO PARA NOMEAR</div>
 </div>
 
 <div class="overlay hidden" id="answer-overlay">
   <div class="answer-card">
-    <div class="answer-prompt">NOME DESTA REGIÃO:</div>
+    <div class="answer-prompt" data-i18n="answerPrompt">NOME DESTA REGIÃO:</div>
     <div class="answer-hint" id="answer-hint"></div>
     <div class="answer-input-wrap">
-      <input type="text" id="answer-input" placeholder="DIGITE AQUI..." autocomplete="off" spellcheck="false" />
+      <input type="text" id="answer-input" placeholder="DIGITE AQUI..." data-i18n="answerInputPh" autocomplete="off" spellcheck="false" />
       <span class="answer-status-icon" id="status-icon"></span>
     </div>
     <div class="answer-actions">
-      <button id="btn-confirm">Confirmar</button>
-      <button id="btn-skip">Pular</button>
+      <button id="btn-confirm" data-i18n="confirmBtn">Confirmar</button>
+      <button id="btn-skip" data-i18n="skipBtn">Pular</button>
     </div>
     <div class="answer-feedback" id="answer-feedback"></div>
   </div>
@@ -683,36 +704,36 @@
 <div class="screen gone" id="result-screen">
   <div class="result-card">
     <div class="result-header">
-      <div class="result-title">Partida Concluída</div>
+      <div class="result-title" data-i18n="resultTitle">Partida Concluída</div>
       <div class="result-mode-tag" id="result-mode-tag">—</div>
     </div>
     <div class="result-stats">
       <div class="stat-box">
         <div class="stat-val mono" id="res-time">00:00</div>
-        <div class="stat-label">Tempo</div>
+        <div class="stat-label" data-i18n="resTime">Tempo</div>
       </div>
       <div class="stat-box">
         <div class="stat-val mono" id="res-score">0</div>
-        <div class="stat-label">Acertos</div>
+        <div class="stat-label" data-i18n="resScore">Acertos</div>
       </div>
       <div class="stat-box">
         <div class="stat-val mono" id="res-pct">0%</div>
-        <div class="stat-label">Aproveitamento</div>
+        <div class="stat-label" data-i18n="resPct">Aproveitamento</div>
       </div>
     </div>
     <div class="result-lists-wrap">
       <div class="result-list-col">
-        <div class="result-section-title">Acertos</div>
+        <div class="result-section-title" data-i18n="resCorrect">Acertos</div>
         <div class="result-list correct" id="res-correct-list"></div>
       </div>
       <div class="result-list-col">
-        <div class="result-section-title">Não identificados</div>
+        <div class="result-section-title" data-i18n="resWrong">Não identificados</div>
         <div class="result-list wrong" id="res-wrong-list"></div>
       </div>
     </div>
     <div class="result-actions">
-      <button id="btn-play-again">Jogar Novamente</button>
-      <button id="btn-change-mode">Voltar ao Menu</button>
+      <button id="btn-play-again" data-i18n="playAgainBtn">Jogar Novamente</button>
+      <button id="btn-change-mode" data-i18n="backBtn">Voltar ao Menu</button>
     </div>
   </div>
 </div>
@@ -1280,11 +1301,11 @@ const EXTRA_ALIASES = {
         const tooltip = DOM.tooltip;
         if (State.answered.has(d.id)) {
           const ans = State.answered.get(d.id);
-          tooltip.textContent = ans.correct ? `[ACERTO] ${ans.name}` : `[ERRO] ${ans.name}`;
+          tooltip.textContent = ans.correct ? `${i18n[currentLang].hit} ${ans.name}` : `${i18n[currentLang].miss} ${ans.name}`;
         } else if (State.skipped.has(d.id)) {
-          tooltip.textContent = '[PULADO]';
+          tooltip.textContent = i18n[currentLang].skipped;
         } else {
-          tooltip.textContent = '? CLIQUE PARA IDENTIFICAR';
+          tooltip.textContent = i18n[currentLang].clickToIdentify;
         }
         tooltip.classList.remove('hide');
         tooltip.style.left = (e.clientX + 14) + 'px';
@@ -1356,9 +1377,9 @@ const EXTRA_ALIASES = {
             const d = State.answered.get(f.id);
             tooltip.textContent = d.correct ? `[ACERTO] ${d.name}` : `[ERRO] ${d.name}`;
           } else if (State.skipped.has(f.id)) {
-            tooltip.textContent = '[PULADO]';
+            tooltip.textContent = i18n[currentLang].skipped;
           } else {
-            tooltip.textContent = '? CLIQUE PARA IDENTIFICAR';
+            tooltip.textContent = i18n[currentLang].clickToIdentify;
           }
           tooltip.classList.remove('hide');
         });
@@ -1425,7 +1446,7 @@ const EXTRA_ALIASES = {
     State.skipped = new Set();
     State.currentFeature = null;
 
-    DOM.hudMode.textContent = `${State.mode === 'world' ? 'MUNDO' : 'BRASIL'} / ${State.difficulty === 'easy' ? 'FÁCIL' : 'DIFÍCIL'}`;
+    DOM.hudMode.textContent = `${State.mode === 'world' ? i18n[currentLang].hudWorld : i18n[currentLang].hudBrazil} / ${State.difficulty === 'easy' ? i18n[currentLang].hudEasy : i18n[currentLang].hudHard}`;
 
     try {
       State.geoFeatures = await loadGeoData(State.mode);
@@ -1441,7 +1462,7 @@ const EXTRA_ALIASES = {
     } catch(err) {
       DOM.loading.style.display = 'none';
       DOM.errorModal.classList.remove('hidden');
-      DOM.errorMessage.textContent = 'Erro ao processar mapa: ' + String(err.message);
+      DOM.errorMessage.textContent = i18n[currentLang].errLoad + ' ' + String(err.message);
     } finally {
       State.isLoading = false;
     }
@@ -1469,7 +1490,7 @@ const EXTRA_ALIASES = {
     DOM.answerFeedback.className = 'answer-feedback';
     DOM.statusIcon.textContent = '';
     DOM.statusIcon.className = 'answer-status-icon';
-    document.getElementById('answer-hint').textContent = State.difficulty === 'easy' ? '[DICA: FRONTEIRAS VISÍVEIS NO MAPA]' : '';
+    document.getElementById('answer-hint').textContent = State.difficulty === 'easy' ? i18n[currentLang].hintBorder : '';
     
     if (State.globe) {
       State.globe.controls().autoRotate = false;
@@ -1500,9 +1521,9 @@ const EXTRA_ALIASES = {
       State.score++;
       State.answered.set(feature.id, { name, correct: true });
       DOM.answerInput.classList.add('input-success');
-      DOM.statusIcon.textContent = '[ACERTO]';
+      DOM.statusIcon.textContent = i18n[currentLang].hit;
       DOM.statusIcon.className = 'answer-status-icon correct';
-      DOM.answerFeedback.textContent = `CORRETO: ${name}`;
+      DOM.answerFeedback.textContent = `${i18n[currentLang].correctMsg} ${name}`;
       DOM.answerFeedback.className = 'answer-feedback correct visible';
       DOM.answerInput.disabled = true;
       refreshGlobe();
@@ -1510,9 +1531,9 @@ const EXTRA_ALIASES = {
       closeOverlayTimer = setTimeout(closeAnswerOverlay, 1000);
     } else {
       DOM.answerInput.classList.add('input-error');
-      DOM.statusIcon.textContent = '[ERRO]';
+      DOM.statusIcon.textContent = i18n[currentLang].miss;
       DOM.statusIcon.className = 'answer-status-icon wrong';
-      DOM.answerFeedback.textContent = 'INCORRETO';
+      DOM.answerFeedback.textContent = i18n[currentLang].incorrectMsg;
       DOM.answerFeedback.className = 'answer-feedback wrong visible';
       setTimeout(() => {
         DOM.answerInput.classList.remove('input-error');
@@ -1526,7 +1547,7 @@ const EXTRA_ALIASES = {
     const feature = State.currentFeature;
     if (!feature) return;
     State.skipped.add(feature.id);
-    DOM.answerFeedback.textContent = 'PULADO';
+    DOM.answerFeedback.textContent = i18n[currentLang].skipped;
     DOM.answerFeedback.className = 'answer-feedback wrong visible';
     refreshGlobe();
     updateHUD();
@@ -1540,7 +1561,7 @@ const EXTRA_ALIASES = {
   }
 
   function buildResult() {
-    document.getElementById('result-mode-tag').textContent = `${State.mode === 'world' ? 'MUNDO' : 'BRASIL'} / ${State.difficulty === 'easy' ? 'FÁCIL' : 'DIFÍCIL'}`;
+    document.getElementById('result-mode-tag').textContent = `${State.mode === 'world' ? i18n[currentLang].hudWorld : i18n[currentLang].hudBrazil} / ${State.difficulty === 'easy' ? i18n[currentLang].hudEasy : i18n[currentLang].hudHard}`;
     document.getElementById('res-time').textContent = formatTime(State.timerSec);
     document.getElementById('res-score').textContent = State.score;
     const pct = State.totalRegions > 0 ? Math.round((State.score / State.totalRegions) * 100) : 0;
